@@ -596,7 +596,51 @@ namespace netevo {
       // Update the state ID mapping
       refreshStateIDs();
    }
-
+    
+    void BarabasiAlbertGraph( int nodes, int arcPerAddition, string defNodeDyn, string defEdgeDyn){
+        // Clear any existing structure
+        clear();
+        
+        Random      mRandom;
+        mRandom.seedFromTime();
+        vector<int> nodeChoice;
+        vector<int> targets(arcPerAddition, -1);
+        set<int>    mRndNodes;
+        int currentIndex = 0;
+        
+        // add seed nodes and mark them as targets
+        for(auto &v : targets){
+            v = currentIndex++;
+            this->addNode(defNodeDyn);
+        }
+        
+        while (countNodes(*this) < nodes ) {
+            // Add new node and connect to targets
+            currentIndex =  this->id( this->addNode(defNodeDyn) );
+            for(const auto &v : targets ){
+                this->addArc( this->nodeFromId( currentIndex ), this->nodeFromId( v ), defEdgeDyn );
+            }
+            // This determines the degree probability
+            nodeChoice.insert(nodeChoice.end(), targets.begin(), targets.end() );
+            nodeChoice.insert(nodeChoice.end(), arcPerAddition, currentIndex);  //degree of the new node
+            
+            mRndNodes.clear();
+            while (mRndNodes.size() < arcPerAddition) {
+                mRndNodes.insert( nodeChoice[ mRandom.integer( nodeChoice.size() ) ] );
+            }
+            targets.clear();
+            targets.insert(targets.begin(), mRndNodes.begin(), mRndNodes.end() );
+        }
+        
+        // Update the state ID mapping
+        refreshStateIDs();
+    }
+    
+    void BarabasiAlbertGraph( int nodes, int arcPerAddition ){
+        BarabasiAlbertGraph(nodes, arcPerAddition, "NoNodeDynamic", "NoArcDynamic");
+    }
+    
+    
    void System::makeUndirected () {
       for (System::ArcIt e(*this); e != INVALID; ++e) {
          // Check to make sure arc in other direction does not already exist
